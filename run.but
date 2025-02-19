@@ -1,0 +1,4 @@
+cd ./Valuator
+dotnet restore
+dotnet build
+dotnet run
