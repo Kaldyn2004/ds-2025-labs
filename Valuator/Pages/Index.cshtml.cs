@@ -25,6 +25,10 @@ public class IndexModel : PageModel
 
     public IActionResult OnPost(string text)
     {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return Redirect($"/");
+        }
         _logger.LogDebug(text);
 
         string id = Guid.NewGuid().ToString();
@@ -48,15 +52,7 @@ public class IndexModel : PageModel
 
     private double CalculateRank(string text)
     {
-        if (string.IsNullOrEmpty(text))
-        {
-            return 0.0;
-        }
-        var alphabetChars = Regex.Replace(text, @"[A-Za-zА-Яа-я]", "");
-
-        double rank = (double)alphabetChars.Length / text.Length;
-
-        return Math.Min(Math.Max(rank, 0.0), 1.0);
+        return text.Count(ch => !char.IsLetter(ch)) / (double)text.Length;
     }
 
     private double CheckSimilarity(string text)
