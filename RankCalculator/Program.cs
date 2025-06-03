@@ -2,6 +2,7 @@ using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using StackExchange.Redis;
+using System.Text.Json;
 
 namespace Consumer;
 
@@ -60,6 +61,19 @@ class Program
         double rank = CalculateRank(text);
 
         db.StringSet(rankKey, rank);
+
+        var eventBody = new {
+            EventType = "RankCalculated",
+            TextId = id,
+            Rank = rank,
+        };
+        var eventBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(eventBody));
+
+        await channel.BasicPublishAsync(
+            exchange: "logs",
+            routingKey: string.Empty,
+            body: eventBytes
+        );
 
         Console.WriteLine($"Consuming: {id} from subject");
         await channel.BasicAckAsync(eventArgs.DeliveryTag, false);
