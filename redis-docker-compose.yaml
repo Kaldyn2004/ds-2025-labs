@@ -8,6 +8,22 @@ services:
     command: redis-server --loglevel warning
     volumes:
       - cache:/data
+
+  rabbitmq-pa3:
+    image: rabbitmq:3.13.7-management
+    container_name: rabbitmq-pa3
+    hostname: rabbitmq-pa3
+    environment:
+      - RABBITMQ_DEFAULT_USER=kirill
+      - RABBITMQ_DEFAULT_PASS=12345
+      - RABBITMQ_DEFAULT_VHOST=/
+    volumes:
+      - rabbitmq_pa3_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
 volumes:
   cache:
     driver: local
+  rabbitmq_pa3_data:

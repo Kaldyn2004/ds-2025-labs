@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
+using RabbitMQ.Client;
 
 public class Program
 {
@@ -18,6 +19,30 @@ public class Program
         {
             var configuration = builder.Configuration.GetSection("Redis:Configuration").Value;
             return ConnectionMultiplexer.Connect(configuration);
+        });
+
+        // RabbitMQ
+        builder.Services.AddSingleton<IConnection>(sp =>
+        {
+            var factory = new ConnectionFactory()
+            {
+                HostName = builder.Configuration.GetSection("RabbitMQ:HostName").Value,
+                UserName = builder.Configuration.GetSection("RabbitMQ:UserName").Value,
+                Password = builder.Configuration.GetSection("RabbitMQ:Password").Value
+            };
+            return factory.CreateConnection();
+        });
+
+        builder.Services.AddSingleton<IModel>(sp =>
+        {
+            var connection = sp.GetRequiredService<IConnection>();
+            var channel = connection.CreateModel();
+            channel.QueueDeclare(queue: "rank_queue",
+                                 durable: true,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null);
+            return channel;
         });
 
         builder.Services.AddControllers();

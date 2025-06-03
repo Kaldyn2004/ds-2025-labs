@@ -1,26 +1,36 @@
 using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using StackExchange.Redis;
 
 namespace Consumer;
 
 class Program
 {
     private const string QueueName = "valuator.processing.rank";
+    private const string Host = "localhost";
+    private const string User = "kirill";
+    private const string Pass = "12345";
+    private const string RedisConnectionString = "localhost:6379";
 
     public static async Task Main(string[] args)
     {
-        Console.WriteLine("Consumer started");
+        Console.WriteLine("Rank calculator started");
 
-        ConnectionFactory factory = new ConnectionFactory
+        using var redis = ConnectionMultiplexer.Connect(RedisConnectionString);
+        var db = redis.GetDatabase();
+
+        ConnectionFactory factory = new ConnectionFactory()
         {
-            HostName = "localhost",
+            HostName = Host,
+            UserName = User,
+            Password = Pass,
         };
         await using IConnection connection = await factory.CreateConnectionAsync();
         await using IChannel channel = await connection.CreateChannelAsync();
 
         await DeclareTopologyAsync(channel);
-        string consumerTag = await RunConsumer(channel);
+        string consumerTag = await RunConsumer(channel, db);
 
         Console.WriteLine("Press Enter to exit");
         Console.ReadLine();
@@ -30,10 +40,10 @@ class Program
         Console.WriteLine("done");
     }
 
-    private static async Task<string> RunConsumer(IChannel channel)
+    private static async Task<string> RunConsumer(IChannel channel, IDatabase db)
     {
         AsyncEventingBasicConsumer consumer = new(channel);
-        consumer.ReceivedAsync += (_, eventArgs) => ConsumeAsync(channel, eventArgs);
+        consumer.ReceivedAsync += (_, eventArgs) => ConsumeAsync(channel, eventArgs, db);
         return await channel.BasicConsumeAsync(
             queue: QueueName,
             autoAck: false,
@@ -41,14 +51,24 @@ class Program
         );
     }
 
-    private static async Task ConsumeAsync(IChannel channel, BasicDeliverEventArgs eventArgs)
+    private static async Task ConsumeAsync(IChannel channel, BasicDeliverEventArgs eventArgs, IDatabase db)
     {
-        Console.WriteLine("Consuming");
-        string message = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
-        Console.WriteLine($"Consuming: {message} from subject {eventArgs.Exchange}");
+        string id = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
+        string textKey = "TEXT-" + id;
+        string rankKey = "RANK-" + id;
+        string text = db.StringGet(textKey);
+        double rank = CalculateRank(text);
+
+        db.StringSet(rankKey, rank);
+
+        Console.WriteLine($"Consuming: {id} from subject");
         await channel.BasicAckAsync(eventArgs.DeliveryTag, false);
     }
 
+     private static double CalculateRank(string text)
+     {
+         return text.Count(ch => !char.IsLetter(ch)) / (double)text.Length;
+     }
 
     /// <summary>
     ///  Определяет топологию: queue -> consumer.

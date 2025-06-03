@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using StackExchange.Redis;
 using System;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
+using RabbitMQ.Client;
 
 namespace Valuator.Pages;
 
@@ -11,16 +13,17 @@ public class IndexModel : PageModel
 {
     private readonly ILogger<IndexModel> _logger;
     private readonly IDatabase _redisDatabase;
+    private readonly IModel _rabbitmqChannel;
 
-    public IndexModel(ILogger<IndexModel> logger, IConnectionMultiplexer redisConnection)
+    public IndexModel(ILogger<IndexModel> logger, IConnectionMultiplexer redisConnection, IModel rabbitmqChannel)
     {
         _logger = logger;
         _redisDatabase = redisConnection.GetDatabase();
+        _rabbitmqChannel = rabbitmqChannel;
     }
 
     public void OnGet()
     {
-
     }
 
     public IActionResult OnPost(string text)
@@ -39,20 +42,17 @@ public class IndexModel : PageModel
         double similarity = CheckSimilarity(text);
         _redisDatabase.StringSet(text, "1");
 
-        string rankKey = "RANK-" + id;
-        double rank = CalculateRank(text);
-        _redisDatabase.StringSet(rankKey, rank);
+        var body = Encoding.UTF8.GetBytes(id);
+        _rabbitmqChannel.BasicPublish(exchange: "",
+                                     routingKey: "valuator.processing.rank",
+                                     basicProperties: null,
+                                     body: body);
 
         string similarityKey = "SIMILARITY-" + id;
 
         _redisDatabase.StringSet(similarityKey, similarity);
 
         return Redirect($"summary?id={id}");
-    }
-
-    private double CalculateRank(string text)
-    {
-        return text.Count(ch => !char.IsLetter(ch)) / (double)text.Length;
     }
 
     private double CheckSimilarity(string text)
