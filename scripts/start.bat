@@ -1,15 +1,20 @@
 @echo off
-REM Запуск экземпляров веб-приложения Valuator
+REM Запуск экземпляров веб-приложения Valuator и RankCalculator
 
-REM Запуск первого экземпляра на порту 5001
-start "" cmd /k "cd /d %~dp0\..\Valuator && dotnet run --urls http://localhost:5001"
+REM Запуск первого экземпляра Valuator на порту 5001
+start "Valuator 5001" cmd /c "cd /d %~dp0\..\Valuator && dotnet run --urls http://localhost:5001 && pause"
+start "Valuator 5002" cmd /c "cd /d %~dp0\..\Valuator && dotnet run --urls http://localhost:5002 && pause"
 
-REM Запуск второго экземпляра на порту 5002
-start "" cmd /k "cd /d %~dp0\..\Valuator && dotnet run --urls http://localhost:5002"
+timeout /t 5 >nul
+
+REM Запуск первого экземпляра RankCalculator
+start "RankCalculator 1" cmd /c "cd /d %~dp0\..\RankCalculator && dotnet run && pause"
+start "RankCalculator 2" cmd /c "cd /d %~dp0\..\RankCalculator && dotnet run && pause"
+
+timeout /t 5 >nul
 
 REM Запуск Nginx
 cd /d %~dp0\..\nginx
 start nginx.exe
 
-echo Система запущена
-pause
+echo Done

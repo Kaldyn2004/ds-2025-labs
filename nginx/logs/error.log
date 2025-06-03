@@ -13,3 +13,7 @@
 2025/03/05 23:08:01 [error] 27600#15600: *12 connect() failed (10061: No connection could be made because the target machine actively refused it) while connecting to upstream, client: 127.0.0.1, server: localhost, request: "GET /lib/jquery/dist/jquery.min.js HTTP/1.1", upstream: "http://[::1]:5003/lib/jquery/dist/jquery.min.js", host: "localhost:8080", referrer: "http://localhost:8080/"
 2025/05/22 00:07:56 [emerg] 9192#8092: CreateDirectory() "C:\ds-2025-labs\nginx/temp/client_body_temp" failed (3: The system cannot find the path specified)
 2025/05/22 00:08:54 [emerg] 18072#13840: CreateDirectory() "C:\ds-2025-labs\nginx/temp/client_body_temp" failed (3: The system cannot find the path specified)
+2025/06/03 22:22:35 [emerg] 1656#15756: CreateDirectory() "C:\ds-2025-labs\nginx/temp/client_body_temp" failed (3: The system cannot find the path specified)
+2025/06/03 22:26:20 [emerg] 15956#6312: CreateDirectory() "C:\ds-2025-labs\nginx/temp/client_body_temp" failed (3: The system cannot find the path specified)
+2025/06/03 22:26:34 [emerg] 19696#17168: CreateDirectory() "C:\ds-2025-labs\nginx/temp/client_body_temp" failed (3: The system cannot find the path specified)
+2025/06/03 22:28:20 [emerg] 19468#10336: CreateDirectory() "C:\ds-2025-labs\nginx/temp/client_body_temp" failed (3: The system cannot find the path specified)
