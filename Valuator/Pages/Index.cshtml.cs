@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using StackExchange.Redis;
 using System;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Linq;
 using RabbitMQ.Client;
@@ -51,6 +52,19 @@ public class IndexModel : PageModel
         string similarityKey = "SIMILARITY-" + id;
 
         _redisDatabase.StringSet(similarityKey, similarity);
+
+         var eventBody = new {
+            EventType = "SimilarityCalculated",
+            TextId = id,
+            Similarity = similarity,
+        };
+        var eventBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(eventBody));
+
+         _rabbitmqChannel.BasicPublish(
+             exchange: "logs",
+             routingKey: "",
+             body: eventBytes
+         );
 
         return Redirect($"summary?id={id}");
     }
