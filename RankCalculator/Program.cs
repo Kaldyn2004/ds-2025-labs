@@ -55,6 +55,11 @@ class Program
     private static async Task ConsumeAsync(IChannel channel, BasicDeliverEventArgs eventArgs, IDatabase db)
     {
         string id = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
+
+        TimeSpan interval = TimeSpan.FromSeconds(new Random().Next(3, 15));
+        Console.WriteLine($"Waiting {interval}");
+        await Task.Delay(interval);
+
         string textKey = "TEXT-" + id;
         string rankKey = "RANK-" + id;
         string text = db.StringGet(textKey);
