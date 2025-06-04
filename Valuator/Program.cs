@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using RabbitMQ.Client;
+using SignalRApp;
 
 public class Program
 {
@@ -45,6 +46,8 @@ public class Program
             return channel;
         });
 
+        builder.Services.AddSignalR(); // подключема сервисы SignalR
+
         builder.Services.AddControllers();
 
         var app = builder.Build();
@@ -57,6 +60,8 @@ public class Program
         app.UseStaticFiles();
 
         app.MapControllers();
+
+        app.MapHub<ChatHub>("/chat");   // ChatHub будет обрабатывать запросы по пути /chat
 
         app.UseRouting();
 
