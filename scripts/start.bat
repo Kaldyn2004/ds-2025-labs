@@ -7,9 +7,15 @@ start "Valuator 5002" cmd /c "cd /d %~dp0\..\Valuator && dotnet run --urls http:
 
 timeout /t 5 >nul
 
-REM Запуск первого экземпляра RankCalculator
+REM Запуск экземпляров RankCalculator
 start "RankCalculator 1" cmd /c "cd /d %~dp0\..\RankCalculator && dotnet run && pause"
 start "RankCalculator 2" cmd /c "cd /d %~dp0\..\RankCalculator && dotnet run && pause"
+
+timeout /t 5 >nul
+
+REM Запуск первого экземпляра RankCalculator
+start "logger 1" cmd /c "cd /d %~dp0\..\EventsLogger && dotnet run && pause"
+start "logger 2" cmd /c "cd /d %~dp0\..\EventsLogger && dotnet run && pause"
 
 timeout /t 5 >nul
 
