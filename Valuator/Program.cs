@@ -22,6 +22,18 @@ public class Program
             return ConnectionMultiplexer.Connect(configuration);
         });
 
+         builder.Services.AddCors(options =>
+         {
+             options.AddPolicy("SignalRCors", policy =>
+             {
+                 policy.SetIsOriginAllowed(origin =>
+                        new Uri(origin).Host == "localhost") // Разрешить все localhost-порты
+                     .AllowAnyHeader()
+                     .AllowAnyMethod()
+                     .AllowCredentials();
+             });
+         });
+
         // RabbitMQ
         builder.Services.AddSingleton<IConnection>(sp =>
         {
@@ -61,7 +73,7 @@ public class Program
 
         app.MapControllers();
 
-        app.MapHub<ResultsHub>("/resultsHub");   // ChatHub будет обрабатывать запросы по пути /resultsHub
+        app.MapHub<ResultsHub>("/resultsHub");   // resultsHub будет обрабатывать запросы по пути /resultsHub
 
         app.UseRouting();
 

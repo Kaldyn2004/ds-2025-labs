@@ -30,7 +30,7 @@ class Program
         };
 
          var hubConnection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:8080/resultsHub")  // URL хаба Valuator
+                .WithUrl("http://localhost:5001/resultsHub")  // URL хаба Valuator
                 .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5) })
                 .Build();
 
