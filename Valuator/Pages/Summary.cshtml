@@ -3,13 +3,41 @@
 @{
 }
 <p>Оценка содержания:
-    @if(string.IsNullOrEmpty(Model.RankStr))
-    {
-        <text>Не завершена</text>
-    }
-    else
-    {
-        @Model.RankStr
-    }
+    <span id="rankValue">
+        @if(string.IsNullOrEmpty(Model.RankStr))
+        {
+            <text>Не завершена</text>
+        }
+        else
+        {
+            @Model.RankStr
+        }
+    </span>
 </p>
 <p>Плагиат: @Model.SimilarityStr</p>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/resultsHub")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        connection.on("ReceiveRankUpdate", (rank) => {
+            document.getElementById("rankValue").textContent = rank;
+        });
+
+        async function start() {
+            try {
+                await connection.start();
+                await connection.invoke("SubscribeToResults", "@Model.Id");
+            } catch (err) {
+                console.error(err);
+                setTimeout(start, 5000);
+            }
+        };
+
+        start();
+    </script>
+}

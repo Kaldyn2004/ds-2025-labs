@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using RabbitMQ.Client;
-using SignalRApp;
+using Valuator.Hubs;
 
 public class Program
 {
@@ -61,7 +61,7 @@ public class Program
 
         app.MapControllers();
 
-        app.MapHub<ChatHub>("/chat");   // ChatHub будет обрабатывать запросы по пути /chat
+        app.MapHub<ResultsHub>("/resultsHub");   // ChatHub будет обрабатывать запросы по пути /resultsHub
 
         app.UseRouting();
 

@@ -3,6 +3,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using StackExchange.Redis;
 using System.Text.Json;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Consumer;
 
@@ -27,11 +28,34 @@ class Program
             UserName = User,
             Password = Pass,
         };
+
+         var hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:8080/resultsHub")  // URL хаба Valuator
+                .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5) })
+                .Build();
+
+            hubConnection.Closed += async (error) =>
+            {
+                Console.WriteLine($"SignalR connection closed: {error?.Message}");
+                await Task.Delay(5000);
+                await hubConnection.StartAsync();
+            };
+
+         try
+         {
+             await hubConnection.StartAsync();
+             Console.WriteLine("Connected to SignalR Hub");
+         }
+         catch (Exception ex)
+         {
+             Console.WriteLine($"SignalR connection error: {ex.Message}");
+         }
+
         await using IConnection connection = await factory.CreateConnectionAsync();
         await using IChannel channel = await connection.CreateChannelAsync();
 
         await DeclareTopologyAsync(channel);
-        string consumerTag = await RunConsumer(channel, db);
+        string consumerTag = await RunConsumer(channel, db, hubConnection);
 
         Console.WriteLine("Press Enter to exit");
         Console.ReadLine();
@@ -41,10 +65,10 @@ class Program
         Console.WriteLine("done");
     }
 
-    private static async Task<string> RunConsumer(IChannel channel, IDatabase db)
+    private static async Task<string> RunConsumer(IChannel channel, IDatabase db, HubConnection hubConnection)
     {
         AsyncEventingBasicConsumer consumer = new(channel);
-        consumer.ReceivedAsync += (_, eventArgs) => ConsumeAsync(channel, eventArgs, db);
+        consumer.ReceivedAsync += (_, eventArgs) => ConsumeAsync(channel, eventArgs, db, hubConnection);
         return await channel.BasicConsumeAsync(
             queue: QueueName,
             autoAck: false,
@@ -52,7 +76,7 @@ class Program
         );
     }
 
-    private static async Task ConsumeAsync(IChannel channel, BasicDeliverEventArgs eventArgs, IDatabase db)
+    private static async Task ConsumeAsync(IChannel channel, BasicDeliverEventArgs eventArgs, IDatabase db, HubConnection hubConnection)
     {
         string id = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
 
@@ -66,6 +90,16 @@ class Program
         double rank = CalculateRank(text);
 
         db.StringSet(rankKey, rank);
+
+        try
+        {
+            await hubConnection.InvokeAsync("NotifyRankCalculated", id, rank);
+            Console.WriteLine($"Результат для {id} отправлен через SignalR: {rank:P2}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка SignalR: {ex.Message}");
+        }
 
         var eventBody = new {
             EventType = "RankCalculated",

@@ -21,6 +21,7 @@ public class SummaryModel : PageModel
 
     public string RankStr { get; set; }
     public string SimilarityStr { get; set; }
+    public string Id { get; set; }
 
     public void OnGet(string id)
     {
@@ -28,6 +29,7 @@ public class SummaryModel : PageModel
         string similarityKey = "SIMILARITY-" + id;
         RankStr = _redisDatabase.StringGet(rankKey);
         SimilarityStr = _redisDatabase.StringGet(similarityKey);
+        Id = id;
 
         _logger.LogDebug(id);
     }
