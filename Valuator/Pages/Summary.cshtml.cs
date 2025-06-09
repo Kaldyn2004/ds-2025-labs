@@ -26,6 +26,7 @@ public class SummaryModel : PageModel
     {
         var mainDb = _redisManager.GetMainDatabase();
         string region = mainDb.StringGet(id);
+        _logger.LogInformation($"LOOKUP: {id}, {region}");
         var shardDb = _redisManager.GetShardDatabase(region);
 
         string rankKey = "RANK-" + id;
