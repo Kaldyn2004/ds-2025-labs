@@ -3,6 +3,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using StackExchange.Redis;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Consumer;
 
@@ -12,14 +13,31 @@ class Program
     private const string Host = "localhost";
     private const string User = "kirill";
     private const string Pass = "12345";
-    private const string RedisConnectionString = "localhost:6379";
+
+    // Конфигурация Redis
+    private const string RedisMain = "localhost:6000";
+    private const string RedisRU = "localhost:6001";
+    private const string RedisFR = "localhost:6002";
+    private const string RedisEU = "localhost:6003";
+    private const string RedisUAE = "localhost:6004";
+    private const string RedisASIA = "localhost:6005";
+
+    private static ILogger<Program> _logger;
 
     public static async Task Main(string[] args)
     {
         Console.WriteLine("Rank calculator started");
 
-        using var redis = ConnectionMultiplexer.Connect(RedisConnectionString);
-        var db = redis.GetDatabase();
+        // Инициализация Redis Shard Manager
+        var redisShardManager = new RedisShardManager(new Dictionary<string, string>
+        {
+            ["MAIN"] = RedisMain,
+            ["RU"] = RedisRU,
+            ["FR"] = RedisFR,
+            ["EU"] = RedisEU,
+            ["UAE"] = RedisUAE,
+            ["ASIA"] = RedisASIA
+        });
 
         ConnectionFactory factory = new ConnectionFactory()
         {
@@ -31,7 +49,7 @@ class Program
         await using IChannel channel = await connection.CreateChannelAsync();
 
         await DeclareTopologyAsync(channel);
-        string consumerTag = await RunConsumer(channel, db);
+        string consumerTag = await RunConsumer(channel, redisShardManager);
 
         Console.WriteLine("Press Enter to exit");
         Console.ReadLine();
@@ -41,10 +59,11 @@ class Program
         Console.WriteLine("done");
     }
 
-    private static async Task<string> RunConsumer(IChannel channel, IDatabase db)
+    private static async Task<string> RunConsumer(IChannel channel, RedisShardManager redisManager)
     {
         AsyncEventingBasicConsumer consumer = new(channel);
-        consumer.ReceivedAsync += (_, eventArgs) => ConsumeAsync(channel, eventArgs, db);
+        consumer.ReceivedAsync += (_, eventArgs) => ConsumeAsync(channel, eventArgs, redisManager);
+
         return await channel.BasicConsumeAsync(
             queue: QueueName,
             autoAck: false,
@@ -52,20 +71,37 @@ class Program
         );
     }
 
-    private static async Task ConsumeAsync(IChannel channel, BasicDeliverEventArgs eventArgs, IDatabase db)
+    private static async Task ConsumeAsync(IChannel channel, BasicDeliverEventArgs eventArgs, RedisShardManager redisManager)
     {
+
         string id = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
+        IDatabase mainDb = redisManager.GetMainDatabase();
+
+        string region = mainDb.StringGet(id);
         string textKey = "TEXT-" + id;
         string rankKey = "RANK-" + id;
-        string text = db.StringGet(textKey);
-        double rank = CalculateRank(text);
+        Console.WriteLine($"LOOKUP: {id}, {region}");
 
-        db.StringSet(rankKey, rank);
+        if (string.IsNullOrEmpty(region))
+        {
+            Console.WriteLine($"Region not found");
+            return;
+        }
+
+        IDatabase shardDb = redisManager.GetShardDatabase(region);
+        string text = shardDb.StringGet(textKey);
+
+        // 3. Вычисляем и сохраняем ранг
+        double rank = CalculateRank(text);
+        shardDb.StringSet(rankKey, rank);
+
+        shardDb.StringSet(rankKey, rank);
 
         var eventBody = new {
             EventType = "RankCalculated",
             TextId = id,
             Rank = rank,
+            Region = region
         };
         var eventBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(eventBody));
 
@@ -95,5 +131,35 @@ class Program
             exclusive: false,
             autoDelete: false
         );
+    }
+}
+
+public class RedisShardManager
+{
+    private readonly IConnectionMultiplexer _mainRedis;
+    private readonly Dictionary<string, IConnectionMultiplexer> _shards;
+
+    public RedisShardManager(Dictionary<string, string> configuration)
+    {
+        _mainRedis = ConnectionMultiplexer.Connect(configuration["MAIN"]);
+
+        _shards = new Dictionary<string, IConnectionMultiplexer>
+        {
+            ["RU"] = ConnectionMultiplexer.Connect(configuration["RU"]),
+            ["FR"] = ConnectionMultiplexer.Connect(configuration["FR"]),
+            ["EU"] = ConnectionMultiplexer.Connect(configuration["EU"]),
+            ["UAE"] = ConnectionMultiplexer.Connect(configuration["UAE"]),
+            ["ASIA"] = ConnectionMultiplexer.Connect(configuration["ASIA"])
+        };
+    }
+
+    public IDatabase GetMainDatabase() => _mainRedis.GetDatabase();
+
+    public IDatabase GetShardDatabase(string regionCode)
+    {
+        if (_shards.TryGetValue(regionCode, out var redis))
+            return redis.GetDatabase();
+
+        throw new ArgumentException($"No shard found for region {regionCode}");
     }
 }
