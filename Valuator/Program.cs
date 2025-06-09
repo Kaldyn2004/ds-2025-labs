@@ -1,10 +1,10 @@
-namespace Valuator;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using RabbitMQ.Client;
+using Valuator;
 
 public class Program
 {
@@ -15,10 +15,20 @@ public class Program
         // Add services to the container.
         builder.Services.AddRazorPages();
 
-        builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+        builder.Services.AddSingleton<RedisShardManager>(sp =>
         {
-            var configuration = builder.Configuration.GetSection("Redis:Configuration").Value;
-            return ConnectionMultiplexer.Connect(configuration);
+            var config = new Dictionary<string, string>
+            {
+                ["MAIN"] = builder.Configuration["Redis:Main"],
+                ["RU"] = builder.Configuration["Redis:RU"],
+                ["FR"] = builder.Configuration["Redis:FR"],
+                ["EU"] = builder.Configuration["Redis:EU"],
+                ["UAE"] = builder.Configuration["Redis:UAE"],
+                ["ASIA"] = builder.Configuration["Redis:ASIA"]
+            };
+            return new RedisShardManager(new ConfigurationBuilder()
+                .AddInMemoryCollection(config)
+                .Build());
         });
 
         // RabbitMQ
@@ -26,9 +36,9 @@ public class Program
         {
             var factory = new ConnectionFactory()
             {
-                HostName = builder.Configuration.GetSection("RabbitMQ:HostName").Value,
-                UserName = builder.Configuration.GetSection("RabbitMQ:UserName").Value,
-                Password = builder.Configuration.GetSection("RabbitMQ:Password").Value
+                HostName = builder.Configuration["RabbitMQ:HostName"],
+                UserName = builder.Configuration["RabbitMQ:UserName"],
+                Password = builder.Configuration["RabbitMQ:Password"]
             };
             return factory.CreateConnection();
         });

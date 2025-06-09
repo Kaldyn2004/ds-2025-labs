@@ -13,13 +13,13 @@ namespace Valuator.Pages;
 public class IndexModel : PageModel
 {
     private readonly ILogger<IndexModel> _logger;
-    private readonly IDatabase _redisDatabase;
+    private readonly RedisShardManager _redisManager;
     private readonly IModel _rabbitmqChannel;
 
-    public IndexModel(ILogger<IndexModel> logger, IConnectionMultiplexer redisConnection, IModel rabbitmqChannel)
+    public IndexModel(ILogger<IndexModel> logger, RedisShardManager redisManager, IModel rabbitmqChannel)
     {
         _logger = logger;
-        _redisDatabase = redisConnection.GetDatabase();
+        _redisManager = redisManager;
         _rabbitmqChannel = rabbitmqChannel;
     }
 
@@ -37,11 +37,16 @@ public class IndexModel : PageModel
 
         string id = Guid.NewGuid().ToString();
 
-        string textKey = "TEXT-" + id;
-        _redisDatabase.StringSet(textKey, text);
+        var mainDb = _redisManager.GetMainDatabase();
+        var shardDb = _redisManager.GetShardDatabase(region);
 
-        double similarity = CheckSimilarity(text);
-        _redisDatabase.StringSet(text, "1");
+        mainDb.StringSet(id, region);
+
+        string textKey = "TEXT-" + id;
+        shardDb.StringSet(textKey, text);
+
+        double similarity = CheckSimilarity(text, region);
+        shardDb.StringSet(text, "1");
 
         var body = Encoding.UTF8.GetBytes(id);
         _rabbitmqChannel.BasicPublish(exchange: "",
@@ -51,7 +56,7 @@ public class IndexModel : PageModel
 
         string similarityKey = "SIMILARITY-" + id;
 
-        _redisDatabase.StringSet(similarityKey, similarity);
+        shardDb.StringSet(similarityKey, similarity);
 
          var eventBody = new {
             EventType = "SimilarityCalculated",
@@ -69,9 +74,10 @@ public class IndexModel : PageModel
         return Redirect($"summary?id={id}");
     }
 
-    private double CheckSimilarity(string text)
+    private double CheckSimilarity(string text, string region)
     {
-        bool keyExists = _redisDatabase.KeyExists(text);
+        var shardDb = _redisManager.GetShardDatabase(region);
+        bool keyExists = shardDb.KeyExists(text);
         if (keyExists)
         {
             return 1;

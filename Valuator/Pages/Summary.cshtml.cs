@@ -11,12 +11,12 @@ namespace Valuator.Pages;
 public class SummaryModel : PageModel
 {
     private readonly ILogger<SummaryModel> _logger;
-    private readonly IDatabase _redisDatabase;
+    private readonly RedisShardManager _redisManager;
 
-    public SummaryModel(ILogger<SummaryModel> logger, IConnectionMultiplexer redisConnection)
+    public SummaryModel(ILogger<SummaryModel> logger, RedisShardManager redisManager)
     {
         _logger = logger;
-        _redisDatabase = redisConnection.GetDatabase();
+        _redisManager = redisManager;
     }
 
     public string RankStr { get; set; }
@@ -24,10 +24,14 @@ public class SummaryModel : PageModel
 
     public void OnGet(string id)
     {
+        var mainDb = _redisManager.GetMainDatabase();
+        string region = mainDb.StringGet(id);
+        var shardDb = _redisManager.GetShardDatabase(region);
+
         string rankKey = "RANK-" + id;
         string similarityKey = "SIMILARITY-" + id;
-        RankStr = _redisDatabase.StringGet(rankKey);
-        SimilarityStr = _redisDatabase.StringGet(similarityKey);
+        RankStr = shardDb.StringGet(rankKey);
+        SimilarityStr = shardDb.StringGet(similarityKey);
 
         _logger.LogDebug(id);
     }
