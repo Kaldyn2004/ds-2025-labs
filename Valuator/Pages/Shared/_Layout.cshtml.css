@@ -46,3 +46,8 @@ button.accept-policy {
   white-space: nowrap;
   line-height: 60px;
 }
+
+.submit-button {
+  margin-left: 270px;
+  margin-top: 20px;
+}

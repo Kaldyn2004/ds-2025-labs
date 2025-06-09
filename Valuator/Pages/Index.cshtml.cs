@@ -27,7 +27,7 @@ public class IndexModel : PageModel
     {
     }
 
-    public IActionResult OnPost(string text)
+    public IActionResult OnPost(string text, string region)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
