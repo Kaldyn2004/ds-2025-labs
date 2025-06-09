@@ -1,13 +1,58 @@
 version: '6.2'
 services:
-  cache:
+  redis-main:
     image: redis:6.2
     restart: always
     ports:
-      - '6379:6379'
+      - '6000:6379'
     command: redis-server --loglevel warning
     volumes:
-      - cache:/data
+      - redis-main-data:/data
+
+  redis-ru:
+    image: redis:6.2
+    restart: always
+    ports:
+      - '6001:6379'
+    command: redis-server --loglevel warning
+    volumes:
+      - redis-ru-data:/data
+
+  redis-fr:
+    image: redis:6.2
+    restart: always
+    ports:
+      - '6002:6379'
+    command: redis-server --loglevel warning
+    volumes:
+      - redis-fr-data:/data
+
+  redis-eu:
+    image: redis:6.2
+    restart: always
+    ports:
+      - '6003:6379'
+    command: redis-server --loglevel warning
+    volumes:
+      - redis-eu-data:/data
+
+  redis-uae:
+    image: redis:6.2
+    restart: always
+    ports:
+      - '6004:6379'
+    command: redis-server --loglevel warning
+    volumes:
+      - redis-uae-data:/data
+
+  redis-asia:
+    image: redis:6.2
+    restart: always
+    ports:
+      - '6005:6379'
+    command: redis-server --loglevel warning
+    volumes:
+      - redis-asia-data:/data
 
   rabbitmq-pa3:
     image: rabbitmq:3.13.7-management
@@ -24,6 +69,10 @@ services:
       - "15672:15672"
 
 volumes:
-  cache:
-    driver: local
+  redis-main-data:
+  redis-ru-data:
+  redis-fr-data:
+  redis-eu-data:
+  redis-uae-data:
+  redis-asia-data:
   rabbitmq_pa3_data:
