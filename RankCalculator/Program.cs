@@ -17,9 +17,7 @@ class Program
     // Конфигурация Redis
     private const string RedisMain = "localhost:6000";
     private const string RedisRU = "localhost:6001";
-    private const string RedisFR = "localhost:6002";
     private const string RedisEU = "localhost:6003";
-    private const string RedisUAE = "localhost:6004";
     private const string RedisASIA = "localhost:6005";
 
     private static ILogger<Program> _logger;
@@ -33,9 +31,7 @@ class Program
         {
             ["MAIN"] = RedisMain,
             ["RU"] = RedisRU,
-            ["FR"] = RedisFR,
             ["EU"] = RedisEU,
-            ["UAE"] = RedisUAE,
             ["ASIA"] = RedisASIA
         });
 
@@ -146,9 +142,9 @@ public class RedisShardManager
         _shards = new Dictionary<string, IConnectionMultiplexer>
         {
             ["RU"] = ConnectionMultiplexer.Connect(configuration["RU"]),
-            ["FR"] = ConnectionMultiplexer.Connect(configuration["FR"]),
+            ["FR"] = ConnectionMultiplexer.Connect(configuration["EU"]),
             ["EU"] = ConnectionMultiplexer.Connect(configuration["EU"]),
-            ["UAE"] = ConnectionMultiplexer.Connect(configuration["UAE"]),
+            ["UAE"] = ConnectionMultiplexer.Connect(configuration["ASIA"]),
             ["ASIA"] = ConnectionMultiplexer.Connect(configuration["ASIA"])
         };
     }

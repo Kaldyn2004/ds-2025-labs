@@ -15,9 +15,9 @@ public class RedisShardManager
         _shardConnections = new Dictionary<string, IConnectionMultiplexer>
         {
             ["RU"] = CreateConnection(configuration["RU"]),
-            ["FR"] = CreateConnection(configuration["FR"]),
+            ["FR"] = CreateConnection(configuration["EU"]),
             ["EU"] = CreateConnection(configuration["EU"]),
-            ["UAE"] = CreateConnection(configuration["UAE"]),
+            ["UAE"] = CreateConnection(configuration["ASIA"]),
             ["ASIA"] = CreateConnection(configuration["ASIA"])
         };
     }

@@ -21,9 +21,7 @@ public class Program
             {
                 ["MAIN"] = builder.Configuration["Redis:Main"],
                 ["RU"] = builder.Configuration["Redis:RU"],
-                ["FR"] = builder.Configuration["Redis:FR"],
                 ["EU"] = builder.Configuration["Redis:EU"],
-                ["UAE"] = builder.Configuration["Redis:UAE"],
                 ["ASIA"] = builder.Configuration["Redis:ASIA"]
             };
             return new RedisShardManager(new ConfigurationBuilder()
