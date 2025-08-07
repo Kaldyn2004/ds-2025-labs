@@ -65,4 +65,45 @@ public class TextUtilTest
             { "'", [] },
         };
     }
+
+    [Theory]
+    [MemberData(nameof(CountVowelsParams))]
+    public void Can_count_vowels(string input, int expected)
+    {
+        int result = TextUtil.CountVowels(input);
+        Assert.Equal(expected, result);
+    }
+
+    public static TheoryData<string, int> CountVowelsParams()
+    {
+        return new TheoryData<string, int>
+        {
+            // Пустые строки, пробелы, знаки препинания
+            { null!, 0 },
+            { "", 0 },
+            { "   \t\n", 0 },
+            { "!@#$%^&*() 12345", 0 },
+            { "\"", 0 },
+
+            // строки из задания
+            { "The quick brown fox jumps over the lazy dog", 12 },
+            { "Съешь же ещё этих мягких французских булок, да выпей чаю.", 18 },
+
+            // Английский алфавит
+            { "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 20 },
+            { "abcdefghijklmnopqrstuvwxyz", 20 },
+
+            // Русский алфавит
+            { "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", 21 },
+            { "абвгдеёжзийклмнопрстуфхцчшщъыьэюя", 21 },
+
+            // Все согласные буквы
+            { "БВГДЖЗЙКЛМНПРСТФХЦЧШЩBCDFGHJKLMNPQRSTVWXZ", 41 },
+            { "бвгджзйклмнпрстфхцчшщbcdfghjklmnpqrstvwxz", 41 },
+
+            // Все гласные и не только буквы
+            { "АЕЁИОУЫЭЮЯAEIOUY", 0 },
+            { "аеёиоуыэюяaeiouy", 0 },
+        };
+    }
 }

@@ -22,4 +22,18 @@ public static class TextUtil
             .Select(match => match.Value)
             .ToList();
     }
+
+    public static int CountVowels(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        // Регулярное выражение для подсчета согласных букв:
+        const string pattern = @"[бвгджзйклмнпрстфхцчшщbcdfghjklmnpqrstvwxz]";
+        Regex regex = new(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        return regex.Matches(text).Count;
+    }
 }
