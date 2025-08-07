@@ -15,7 +15,6 @@ public class Program
         builder.Services.AddSingleton(commandChannel);
         var setLogChannel = Channel.CreateUnbounded<Command>();
 
-
         var app = builder.Build();
         app.MapControllers();
 

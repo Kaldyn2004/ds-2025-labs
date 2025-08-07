@@ -11,3 +11,9 @@ set asd 1231232451
 set kirill 2025
 set kirill 2026
 set kirill2 2026
+set test 1231231
+set test_1 12123
+set test_1 -1231
+set test 2147483647
+set max_number 2147483647
+set min_number -2147483648
