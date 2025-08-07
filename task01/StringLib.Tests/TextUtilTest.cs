@@ -98,8 +98,8 @@ public class TextUtilTest
             { "абвгдеёжзийклмнопрстуфхцчшщъыьэюя", 10 },
 
             // Все согласные буквы
-            { "БВГДЖЗЙКЛМНПРСТФХЦЧШЩBCDFGHJKLMNPQRSTVWXZ", 16 },
-            { "бвгджзйклмнпрстфхцчшщbcdfghjklmnpqrstvwxz", 16 },
+            { "БВГДЖЗЙКЛМНПРСТФХЦЧШЩBCDFGHJKLMNPQRSTVWXZ", 0 },
+            { "бвгджзйклмнпрстфхцчшщbcdfghjklmnpqrstvwxz", 0 },
 
             // Все гласные и не только буквы
             { "АЕЁИОУЫЭЮЯAEIOUY", 16 },
