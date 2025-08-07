@@ -30,8 +30,8 @@ public static class TextUtil
             return 0;
         }
 
-        // Регулярное выражение для подсчета согласных букв:
-        const string pattern = @"[бвгджзйклмнпрстфхцчшщbcdfghjklmnpqrstvwxz]";
+        // Регулярное выражение для подсчета гласных букв:
+        const string pattern = @"[аеёиоуыэюяaeiouy]";
         Regex regex = new(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         return regex.Matches(text).Count;
