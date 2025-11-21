@@ -8,11 +8,16 @@ public sealed class Sphere3D
     {
         if (radius < 0)
         {
-            throw new ArgumentException("Радиус шара должен быть положительным.");
+            throw new ArgumentException("The sphere's radius must be positive.");
+        }
+
+        if (radius == 0)
+        {
+            throw new ArgumentException("The sphere's radius cannot be zero.");
         }
 
         Center = center;
-        this.Radius = radius;
+        Radius = radius;
     }
 
     /// <summary>
@@ -31,28 +36,23 @@ public sealed class Sphere3D
     public double Diameter => 2 * Radius;
 
     /// <summary>
-    ///  Площадь поверхности шара
+    ///  Площадь поверхности шара.
     /// </summary>
     public double Area => 4 * Math.PI * Math.Pow(Radius, 2);
 
     /// <summary>
-    /// Объем шара
+    /// Объем шара.
     /// </summary>
-    public double Volume => 4 / 3 * Math.PI * Math.Pow(Radius, 3);
+    public double Volume => (4.0 / 3.0) * Math.PI * Math.Pow(Radius, 3);
 
     /// <summary>
     /// Возвращающий расстояние от данной точки до ближайшей точки поверхности шара.
     /// </summary>
     public double DistanceTo(Point3D p)
     {
-        if (Contains(p))
-        {
-            return Radius - Center.DistanceTo(p);
-        }
-        else
-        {
-            return Center.DistanceTo(p) - Radius;
-        }
+        double distanceToCenter = Center.DistanceTo(p);
+
+        return Math.Abs(distanceToCenter - Radius);
     }
 
     /// <summary>
@@ -60,22 +60,24 @@ public sealed class Sphere3D
     /// </summary>
     public double DistanceTo(Sphere3D p)
     {
+        double centerDistance = Center.DistanceTo(p.Center);
+
         if (Contains(p))
         {
-            return Radius - (Center.DistanceTo(p.Center) + p.Radius);
+            return Radius - (centerDistance + p.Radius);
         }
-        else if (IntersectsWith(p))
+        else if (p.Contains(this))
         {
-            return 0;
+            return p.Radius - (p.Center.DistanceTo(Center) + Radius);
         }
         else
         {
-            return Center.DistanceTo(p.Center) - Radius - p.Radius;
+            return Math.Max(0, centerDistance - Radius - p.Radius);
         }
     }
 
     /// <summary>
-    /// проверка, лежит ли точка внутри шара
+    /// проверка, лежит ли точка внутри шара.
     /// </summary>
     public bool Contains(Point3D p)
     {
@@ -83,18 +85,22 @@ public sealed class Sphere3D
     }
 
     /// <summary>
-    /// проверка, пересекаются ли два шара
+    /// проверка, пересекаются ли два шара.
     /// </summary>
     public bool IntersectsWith(Sphere3D other)
     {
-        return Radius <= Center.DistanceTo(other.Center) + other.Radius || Radius >= Center.DistanceTo(other.Center) - other.Radius;
+        double distanceBeetweenCenters = Center.DistanceTo(other.Center);
+
+        return distanceBeetweenCenters <= Radius + other.Radius;
     }
 
     /// <summary>
-    /// проверка, лежит ли другой шар полностью внутри этого шара
+    /// проверка, лежит ли другой шар полностью внутри этого шара.
     /// </summary>
     public bool Contains(Sphere3D other)
     {
-        return Radius > (Center.DistanceTo(other.Center) + other.Radius);
+        double distanceBeetweenCenters = Center.DistanceTo(other.Center);
+
+        return distanceBeetweenCenters + other.Radius < Radius;
     }
 }
