@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+
 namespace GeometryLib.Tests;
 
 public class Sphere3DTests
@@ -119,7 +120,6 @@ public class Sphere3DTests
             { new Point3D(0, 0, 0), 2.5, (4.0 / 3.0) * Math.PI * 15.625 },
         };
     }
-
 
     [Theory]
     [MemberData(nameof(SphereContainPointTestData))]
@@ -284,7 +284,7 @@ public class Sphere3DTests
             { new Sphere3D(new Point3D(16, 15, 14), 10), new Sphere3D(new Point3D(0, 0, 0), 38.8), 28.8 - Math.Sqrt(677) },
 
             // —феры наход€тс€ за пределом друг друга
-            { new Sphere3D(new Point3D(1,8, -15), 12), new Sphere3D(new Point3D(3, 4, 16), 11), Math.Sqrt(981) - 23 },
+            { new Sphere3D(new Point3D(1, 8, -15), 12), new Sphere3D(new Point3D(3, 4, 16), 11), Math.Sqrt(981) - 23 },
             { new Sphere3D(new Point3D(5, -7, 9), 3.5), new Sphere3D(new Point3D(-5, 7, -9), 3.5), Math.Sqrt(620) - 7 },
         };
     }
